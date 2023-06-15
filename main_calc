@@ -1,0 +1,61 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def pendulum(T):
+    L = 5.0
+    m = 1.0
+
+    def dydt(t, y):
+        x, y, vx, vy = y
+
+        g = 9.81 + 0.05 * np.sin(2 * np.pi * t)
+
+        dxdt = vx
+        dydt = vy
+        dvxdt = -x * T / L
+        dvydt = -y * T / L - m * g
+
+        return np.array([dxdt, dydt, dvxdt, dvydt])
+
+    return dydt
+
+# Начальные условия
+y0 = np.array([3.0, 4.0, 0.0, 0.0])  # [x, y, vx, vy]
+
+# Временные точки для решения
+t = np.linspace(0, 2, 100)
+
+# Шаг по времени
+dt = t[1] - t[0]
+
+# Решение системы дифференциальных уравнений методом Рунге-Кутты 4-го порядка
+def solve_ode(dydt, y0, t):
+    y = np.zeros((len(t), len(y0)))
+    y[0] = y0
+
+    for i in range(len(t) - 1):
+        k1 = dydt(t[i], y[i])
+        k2 = dydt(t[i] + 0.5 * dt, y[i] + 0.5 * dt * k1)
+        k3 = dydt(t[i] + 0.5 * dt, y[i] + 0.5 * dt * k2)
+        k4 = dydt(t[i] + dt, y[i] + dt * k3)
+        y[i + 1] = y[i] + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
+
+    return y
+
+# Решение системы дифференциальных уравнений
+sol = solve_ode(pendulum(0.0), y0, t)
+
+# Извлечение решений
+x = sol[:, 0]
+y = sol[:, 1]
+
+# Вычисление корня из суммы квадратов x и y
+r = np.sqrt(x**2 + y**2)
+
+# Построение графика зависимости корня r от времени
+plt.plot(t, r)
+plt.xlabel('t')
+plt.ylabel('sqrt(x^2 + y^2)')
+plt.title('Зависимость корня от времени')
+plt.grid(True)
+plt.show()
